@@ -8,8 +8,12 @@
  *
  * Node hands out the same module under `node:path`, and `posix` and `win32`
  * on their own under `path/posix`, `node:path/posix`, `path/win32` and
- * `node:path/win32`. Jest keys a mock by the id as written, so each of those
- * ids is mocked too and answers with the module above.
+ * `node:path/win32`. Jest (30 and later) treats `node:X` and `X` as one
+ * module, so the mock of `path` also answers for `node:path`, and the mocks of
+ * `path/posix` and `path/win32` for their `node:` forms. Mocking a `node:` id
+ * as well would replace the mock of the bare id, so only the bare ids are
+ * mocked; `path/posix` and `path/win32` answer with the parts of the module
+ * above.
  *
  * A place that names an offender without a `relative` of this module, by
  * cutting the root off the front of the file's path for example, is not
@@ -35,11 +39,8 @@ jest.mock('path', () => {
   for (const paths of [platform, posix, win32]) Object.assign(paths, { posix, win32 });
   return platform;
 });
-jest.mock('node:path', () => jest.requireMock<typeof import('path')>('path'));
 jest.mock('path/posix', () => jest.requireMock<typeof import('path')>('path').posix);
-jest.mock('node:path/posix', () => jest.requireMock<typeof import('path')>('path').posix);
 jest.mock('path/win32', () => jest.requireMock<typeof import('path')>('path').win32);
-jest.mock('node:path/win32', () => jest.requireMock<typeof import('path')>('path').win32);
 
 import { posix as nodePosix, relative as nodeRelative, sep as nodeSep } from 'node:path';
 import { join, posix, relative, sep, win32 } from 'path';
