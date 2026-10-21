@@ -8,8 +8,11 @@
  *
  * Node hands out the same module under `node:path`, and `posix` and `win32`
  * on their own under `path/posix`, `node:path/posix`, `path/win32` and
- * `node:path/win32`. Jest keys a mock by the id as written, so each of those
- * ids is mocked too and answers with the module above.
+ * `node:path/win32`. Jest (30 and later) keys a core-module mock by the id
+ * without its `node:` prefix, so mocking `path`, `path/posix` and `path/win32`
+ * covers the `node:` forms too. Registering a `node:` form as well would
+ * replace the factory of its bare form, so it is left out. The imports below
+ * still go through every one of those ids, so a form left unmocked fails here.
  *
  * A place that names an offender without a `relative` of this module, by
  * cutting the root off the front of the file's path for example, is not
@@ -35,11 +38,8 @@ jest.mock('path', () => {
   for (const paths of [platform, posix, win32]) Object.assign(paths, { posix, win32 });
   return platform;
 });
-jest.mock('node:path', () => jest.requireMock<typeof import('path')>('path'));
 jest.mock('path/posix', () => jest.requireMock<typeof import('path')>('path').posix);
-jest.mock('node:path/posix', () => jest.requireMock<typeof import('path')>('path').posix);
 jest.mock('path/win32', () => jest.requireMock<typeof import('path')>('path').win32);
-jest.mock('node:path/win32', () => jest.requireMock<typeof import('path')>('path').win32);
 
 import { posix as nodePosix, relative as nodeRelative, sep as nodeSep } from 'node:path';
 import { join, posix, relative, sep, win32 } from 'path';
